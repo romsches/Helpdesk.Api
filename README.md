@@ -6,12 +6,12 @@ A professional, production-ready RESTful Web API built with **.NET 10** and **Po
 
 ## 🚀 Tech Stack
 
-* **Framework:** .NET 10 (ASP.NET Core Web API)
-* **Database:** PostgreSQL (Containerized via Docker)
-* **ORM:** Entity Framework (EF) Core (Code-First Approach)
-* **Validation:** FluentValidation (Separation of concerns)
-* **Logging:** Serilog (Structured console logging with performance metrics)
-* **Documentation:** Swagger / OpenAPI UI
+- **Framework:** .NET 10 (ASP.NET Core Web API)
+- **Database:** PostgreSQL (Containerized via Docker)
+- **ORM:** Entity Framework (EF) Core (Code-First Approach)
+- **Validation:** FluentValidation (Separation of concerns)
+- **Logging:** Serilog (Structured console logging with performance metrics)
+- **Documentation:** Swagger / OpenAPI UI
 
 ---
 
@@ -56,10 +56,10 @@ The application follows standard enterprise patterns to ensure high maintainabil
 ## ⚙️ Getting Started & Installation
 
 ### Prerequisites
-* .NET 10 SDK installed
-* Docker (for running PostgreSQL)
+- .NET 10 SDK installed
+- Docker (for running PostgreSQL)
 
 ### 1. Clone the repository
 ```bash
-git clone [https://github.com/your-username/helpdesk-api.git](https://github.com/your-username/helpdesk-api.git)
+git clone [https://github.com/romsches/Helpdesk.Api.git](https://github.com/romsches/Helpdesk.Api.git)
 cd Helpdesk.Api
