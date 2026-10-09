@@ -3,6 +3,10 @@ using System.Text.Json;
 
 namespace Helpdesk.Api.Middleware;
 
+/// <summary>
+/// Globaler Exception Handling Middleware zur zentralen Abfangung von unbehandelten Ausnahmen.
+/// Garantiert eine standardisierte JSON-Fehlerausgabe für den Client.
+/// </summary>
 public class ExceptionHandlingMiddleware
 {
     private readonly RequestDelegate _next;
@@ -14,6 +18,9 @@ public class ExceptionHandlingMiddleware
         _logger = logger;
     }
 
+    /// <summary>
+    /// Interceptet den HTTP-Request-Lifecycle und fängt auftretende Exceptions ab.
+    /// </summary>
     public async Task InvokeAsync(HttpContext context)
     {
         try
@@ -22,11 +29,14 @@ public class ExceptionHandlingMiddleware
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Произошла непредвиденная ошибка: {Message}", ex.Message);
+            _logger.LogError(ex, "An unhandled exception occurred: {Message}", ex.Message);
             await HandleExceptionAsync(context, ex);
         }
     }
 
+    /// <summary>
+    /// Erstellt eine standardisierte, RFC 7807-konforme JSON-Fehlerantwort.
+    /// </summary>
     private static Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
         context.Response.ContentType = "application/json";
@@ -35,8 +45,8 @@ public class ExceptionHandlingMiddleware
         var response = new
         {
             status = context.Response.StatusCode,
-            message = "Внутренняя ошибка сервера. Мы уже фиксируем проблему.",
-            detailed = exception.Message // В production можно убирать, но для портфолио/демонстрации — идеально
+            message = "Internal Server Error. The issue has been logged and is being investigated.",
+            detailed = exception.Message // Hilfreich für Portfolio/Debugging; in strikter Production ggf. entfernen
         };
 
         var jsonResponse = JsonSerializer.Serialize(response);
