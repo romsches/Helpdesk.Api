@@ -7,7 +7,7 @@ interface TicketModalProps {
     onClose: () => void;
 }
 
-const getPriorityBadgeClass = (priority: Priority) => {
+const getPriorityBadgeClass = (priority: Priority): string => {
     switch (priority) {
         case 'High':
             return 'bg-red-100 text-red-700 border-red-200';
@@ -20,13 +20,17 @@ const getPriorityBadgeClass = (priority: Priority) => {
     }
 };
 
+/**
+ * Modal component displaying detailed information about a selected support ticket.
+ */
 export const TicketModal: React.FC<TicketModalProps> = ({ ticket, onClose }) => {
     if (!ticket) return null;
 
     return (
         <div className= "fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" >
         <div className="bg-white rounded-xl shadow-xl max-w-lg w-full overflow-hidden border border-gray-200 animate-in fade-in zoom-in duration-200" >
-        {/* Шапка модального окна */ }
+
+        {/* Modal Header */ }
             < div className = "flex justify-between items-center px-6 py-4 border-b border-gray-100 bg-gray-50" >
                 <div className="flex items-center gap-2" >
                     <Tag size={ 18 } className = "text-blue-600" />
@@ -35,12 +39,13 @@ export const TicketModal: React.FC<TicketModalProps> = ({ ticket, onClose }) => 
                             < button
     onClick = { onClose }
     className = "text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-200 transition"
+    aria - label="Close modal"
         >
         <X size={ 20 } />
             </button>
             </div>
 
-    {/* Тело модального окна */ }
+    {/* Modal Body */ }
     <div className="p-6 space-y-5" >
         <div>
         <div className="flex items-center justify-between gap-2 mb-2" >
@@ -53,7 +58,7 @@ export const TicketModal: React.FC<TicketModalProps> = ({ ticket, onClose }) => 
     </div>
 
     < div >
-    <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5" > Beschreibung </h4>
+    <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5" > Description </h4>
         < div className = "bg-gray-50 p-4 rounded-lg border border-gray-200 text-sm text-gray-800 whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto" >
         { ticket.description }
             </div>
@@ -63,7 +68,7 @@ export const TicketModal: React.FC<TicketModalProps> = ({ ticket, onClose }) => 
                 <div className="flex items-center gap-2" >
                     <User size={ 16 } className = "text-gray-400" />
                         <div>
-                        <span className="block text-gray-400 font-medium" > Erstellt von </span>
+                        <span className="block text-gray-400 font-medium" > Created By </span>
                             < span className = "font-semibold text-gray-800" > { ticket.createdBy || 'Anonymous' } </span>
                                 </div>
                                 </div>
@@ -71,7 +76,7 @@ export const TicketModal: React.FC<TicketModalProps> = ({ ticket, onClose }) => 
                                 < div className = "flex items-center gap-2" >
                                     <ShieldAlert size={ 16 } className = "text-gray-400" />
                                         <div>
-                                        <span className="block text-gray-400 font-medium" > Bearbeiter </span>
+                                        <span className="block text-gray-400 font-medium" > Assigned To </span>
                                             < span className = "font-semibold text-gray-800" > { ticket.assignedTo || 'Unassigned' } </span>
                                                 </div>
                                                 </div>
@@ -79,25 +84,26 @@ export const TicketModal: React.FC<TicketModalProps> = ({ ticket, onClose }) => 
                                                 < div className = "flex items-center gap-2 col-span-2" >
                                                     <Calendar size={ 16 } className = "text-gray-400" />
                                                         <div>
-                                                        <span className="block text-gray-400 font-medium" > Erstellt am </span>
+                                                        <span className="block text-gray-400 font-medium" > Created At </span>
                                                             < span className = "font-semibold text-gray-800" >
-                                                            { ticket.createdAt ? new Date(ticket.createdAt).toLocaleString() : 'Unbekannt' }
+                                                            { ticket.createdAt ? new Date(ticket.createdAt).toLocaleString() : 'Unknown' }
                                                                 </span>
                                                                 </div>
                                                                 </div>
                                                                 </div>
                                                                 </div>
 
-{/* Футер */ }
+{/* Modal Footer */ }
 <div className="px-6 py-3 bg-gray-50 border-t border-gray-100 flex justify-end" >
     <button
-            onClick={ onClose }
+                        onClick={ onClose }
 className = "bg-gray-800 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-gray-900 transition"
     >
-    Schließen
+    Close
     </button>
     </div>
+
     </div>
     </div>
-  );
+    );
 };

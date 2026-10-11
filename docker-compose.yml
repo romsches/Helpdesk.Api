@@ -1,43 +1,41 @@
-services:
-  postgres-db:
-    image: postgres:16-alpine
-    container_name: helpdesk_postgres
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    restart: always
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+using FluentValidation;
+using Helpdesk.Api.Models;
 
-  helpdesk-api:
-    build: .
-    container_name: helpdesk_api_container
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Host=postgres-db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
-    ports:
-      - "5208:8080"
-    depends_on:
-      postgres-db:
-        condition: service_healthy
-    restart: always
+namespace Helpdesk.Api.Validators;
 
-  helpdesk-frontend:
-    build: ./helpdesk-frontend
-    container_name: helpdesk_frontend_container
-    ports:
-      - "5173:80"
-    depends_on:
-      - helpdesk-api
-    restart: always
+/// <summary>
+/// Defines validation rules for the <see cref="Ticket"/> entity using FluentValidation,
+/// ensuring data integrity before processing by the business logic layer.
+/// </summary>
+public class TicketValidator : AbstractValidator<Ticket>
+{
+    private static readonly string[] AllowedPriorities = ["Low", "Medium", "High"];
+    private static readonly string[] AllowedStatuses = ["Open", "InProgress", "Closed", "Resolved"];
 
-volumes:
-  postgres_data:
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TicketValidator"/> class.
+    /// </summary>
+    public TicketValidator()
+    {
+        // Validation for Ticket Title
+        RuleFor(t => t.Title)
+            .NotEmpty().WithMessage("The title is a required field and cannot be empty.")
+            .MaximumLength(200).WithMessage("The title cannot exceed 200 characters.");
+
+        // Validation for Ticket Description
+        RuleFor(t => t.Description)
+            .NotEmpty().WithMessage("The description is a required field and cannot be empty.");
+
+        // Validation for Priority (case-insensitive)
+        RuleFor(t => t.Priority)
+            .NotEmpty().WithMessage("The priority is a required field.")
+            .Must(p => AllowedPriorities.Contains(p, StringComparer.OrdinalIgnoreCase))
+            .WithMessage("The priority must be one of the following values: Low, Medium, High.");
+
+        // Validation for Status (case-insensitive)
+        RuleFor(t => t.Status)
+            .NotEmpty().WithMessage("The status is a required field.")
+            .Must(s => AllowedStatuses.Contains(s, StringComparer.OrdinalIgnoreCase))
+            .WithMessage("The status must be one of the following values: Open, InProgress, Closed, Resolved.");
+    }
+}

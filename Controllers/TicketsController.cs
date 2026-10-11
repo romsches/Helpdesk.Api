@@ -6,47 +6,43 @@ using Helpdesk.Api.Models;
 namespace Helpdesk.Api.Controllers;
 
 /// <summary>
-/// Controller zur Verwaltung von Support-Tickets (RESTful Endpoints).
+/// RESTful controller for managing IT support tickets.
 /// </summary>
 [Route("api/[controller]")]
 [ApiController]
-public class TicketsController : ControllerBase
+public class TicketsController(AppDbContext context) : ControllerBase
 {
-    private readonly AppDbContext _context;
+    private readonly AppDbContext _context = context;
 
-    public TicketsController(AppDbContext context)
-    {
-        _context = context;
-    }
-
-    // ---------------------------------------------------------------------------
-    // GET: api/tickets
-    // GET: api/tickets?status=Open
-    // ---------------------------------------------------------------------------
     /// <summary>
-    /// Ruft eine Liste aller Tickets ab, optional gefiltert nach Status.
+    /// Retrieves a list of all support tickets, optionally filtered by status.
     /// </summary>
+    /// <param name="status">Optional status filter (case-insensitive).</param>
+    /// <returns>A collection of tickets matching the criteria.</returns>
     [HttpGet]
+    [ProducesResponseType(typeof(IEnumerable<Ticket>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<Ticket>>> GetTickets([FromQuery] string? status)
     {
         var query = _context.Tickets.AsQueryable();
 
-        // Status-Filter dynamisch anwenden (case-insensitive)
-        if (!string.IsNullOrEmpty(status))
+        // Dynamically apply status filter if provided
+        if (!string.IsNullOrWhiteSpace(status))
         {
             query = query.Where(t => t.Status.ToLower() == status.ToLower());
         }
 
-        return await query.ToListAsync();
+        var tickets = await query.AsNoTracking().ToListAsync();
+        return Ok(tickets);
     }
 
-    // ---------------------------------------------------------------------------
-    // GET: api/tickets/5
-    // ---------------------------------------------------------------------------
     /// <summary>
-    /// Ruft ein spezifisches Ticket anhand seiner eindeutigen ID ab.
+    /// Retrieves a specific support ticket by its unique identifier.
     /// </summary>
-    [HttpGet("{id}")]
+    /// <param name="id">The unique identifier of the ticket.</param>
+    /// <returns>The requested ticket if found; otherwise, NotFound.</returns>
+    [HttpGet("{id:int}")]
+    [ProducesResponseType(typeof(Ticket), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<Ticket>> GetTicket(int id)
     {
         var ticket = await _context.Tickets.FindAsync(id);
@@ -56,25 +52,26 @@ public class TicketsController : ControllerBase
             return NotFound();
         }
 
-        return ticket;
+        return Ok(ticket);
     }
 
-    // ---------------------------------------------------------------------------
-    // POST: api/tickets
-    // ---------------------------------------------------------------------------
     /// <summary>
-    /// Erstellt ein neues Support-Ticket mit automatischen Fallback-Werten.
+    /// Creates a new support ticket with automatic fallback defaults.
     /// </summary>
+    /// <param name="ticket">The ticket payload.</param>
+    /// <returns>The created ticket with its assigned ID.</returns>
     [HttpPost]
-    public async Task<ActionResult<Ticket>> PostTicket(Ticket ticket)
+    [ProducesResponseType(typeof(Ticket), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<Ticket>> PostTicket([FromBody] Ticket ticket)
     {
-        // Fallback-Injektion zur Vermeidung von PostgreSQL NOT NULL-Constraint-Verletzungen
-        if (string.IsNullOrEmpty(ticket.CreatedBy))
+        // Fallback injection to prevent PostgreSQL NOT NULL constraint violations
+        if (string.IsNullOrWhiteSpace(ticket.CreatedBy))
         {
             ticket.CreatedBy = "Anonymous";
         }
 
-        if (string.IsNullOrEmpty(ticket.AssignedTo))
+        if (string.IsNullOrWhiteSpace(ticket.AssignedTo))
         {
             ticket.AssignedTo = "Unassigned";
         }
@@ -85,13 +82,15 @@ public class TicketsController : ControllerBase
         return CreatedAtAction(nameof(GetTicket), new { id = ticket.Id }, ticket);
     }
 
-    // ---------------------------------------------------------------------------
-    // PATCH: api/tickets/5/status
-    // ---------------------------------------------------------------------------
     /// <summary>
-    /// Ändert den Status eines Tickets und weist optional einen Bearbeiter zu.
+    /// Updates the status of an existing ticket and optionally assigns an owner.
     /// </summary>
-    [HttpPatch("{id}/status")]
+    /// <param name="id">The unique identifier of the ticket.</param>
+    /// <param name="dto">The status update payload.</param>
+    /// <returns>NoContent if successful; otherwise, NotFound.</returns>
+    [HttpPatch("{id:int}/status")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateTicketStatus(int id, [FromBody] UpdateTicketStatusDto dto)
     {
         var ticket = await _context.Tickets.FindAsync(id);
@@ -102,7 +101,7 @@ public class TicketsController : ControllerBase
 
         ticket.Status = dto.Status;
 
-        if (!string.IsNullOrEmpty(dto.AssignedTo))
+        if (!string.IsNullOrWhiteSpace(dto.AssignedTo))
         {
             ticket.AssignedTo = dto.AssignedTo;
         }
@@ -117,13 +116,15 @@ public class TicketsController : ControllerBase
         return NoContent();
     }
 
-    // ---------------------------------------------------------------------------
-    // PATCH: api/tickets/5/assign
-    // ---------------------------------------------------------------------------
     /// <summary>
-    /// Aktualisiert den Bearbeiter (AssignedTo) eines Tickets.
+    /// Updates the assignee of an existing ticket.
     /// </summary>
-    [HttpPatch("{id}/assign")]
+    /// <param name="id">The unique identifier of the ticket.</param>
+    /// <param name="dto">The assignee update payload.</param>
+    /// <returns>NoContent if successful; otherwise, NotFound.</returns>
+    [HttpPatch("{id:int}/assign")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateTicketAssignee(int id, [FromBody] UpdateTicketAssigneeDto dto)
     {
         var ticket = await _context.Tickets.FindAsync(id);
@@ -138,14 +139,17 @@ public class TicketsController : ControllerBase
         return NoContent();
     }
 
-    // ---------------------------------------------------------------------------
-    // PUT: api/tickets/5
-    // ---------------------------------------------------------------------------
     /// <summary>
-    /// Aktualisiert ein bestehendes Ticket vollständig.
+    /// Fully replaces/updates an existing support ticket.
     /// </summary>
-    [HttpPut("{id}")]
-    public async Task<IActionResult> PutTicket(int id, Ticket ticket)
+    /// <param name="id">The unique identifier of the ticket.</param>
+    /// <param name="ticket">The updated ticket object.</param>
+    /// <returns>NoContent if successful; otherwise, BadRequest or NotFound.</returns>
+    [HttpPut("{id:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> PutTicket(int id, [FromBody] Ticket ticket)
     {
         if (id != ticket.Id)
         {
@@ -160,26 +164,24 @@ public class TicketsController : ControllerBase
         }
         catch (DbUpdateConcurrencyException)
         {
-            if (!_context.Tickets.Any(e => e.Id == id))
+            if (!await TicketExistsAsync(id))
             {
                 return NotFound();
             }
-            else
-            {
-                throw;
-            }
+            throw;
         }
 
         return NoContent();
     }
 
-    // ---------------------------------------------------------------------------
-    // DELETE: api/tickets/5
-    // ---------------------------------------------------------------------------
     /// <summary>
-    /// Löscht ein Ticket unwiderruflich aus dem System.
+    /// Permanently deletes a support ticket from the system.
     /// </summary>
-    [HttpDelete("{id}")]
+    /// <param name="id">The unique identifier of the ticket.</param>
+    /// <returns>NoContent if successful; otherwise, NotFound.</returns>
+    [HttpDelete("{id:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteTicket(int id)
     {
         var ticket = await _context.Tickets.FindAsync(id);
@@ -193,21 +195,25 @@ public class TicketsController : ControllerBase
 
         return NoContent();
     }
+
+    /// <summary>
+    /// Checks whether a ticket exists asynchronously.
+    /// </summary>
+    private async Task<bool> TicketExistsAsync(int id)
+    {
+        return await _context.Tickets.AnyAsync(e => e.Id == id);
+    }
 }
 
 /// <summary>
-/// DTO für die Aktualisierung von Ticket-Status und Bearbeiter.
+/// Data Transfer Object for updating a ticket's status and assignee.
 /// </summary>
-public class UpdateTicketStatusDto
-{
-    public string Status { get; set; } = string.Empty;
-    public string? AssignedTo { get; set; }
-}
+/// <param name="Status">The new ticket status.</param>
+/// <param name="AssignedTo">Optional new assignee name.</param>
+public record UpdateTicketStatusDto(string Status, string? AssignedTo);
 
 /// <summary>
-/// DTO für die Zuweisung eines Bearbeiters.
+/// Data Transfer Object for updating a ticket's assignee.
 /// </summary>
-public class UpdateTicketAssigneeDto
-{
-    public string? AssignedTo { get; set; }
-}
+/// <param name="AssignedTo">The new assignee name.</param>
+public record UpdateTicketAssigneeDto(string? AssignedTo);

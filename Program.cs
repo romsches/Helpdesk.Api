@@ -8,17 +8,21 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Настраиваем Serilog для логирования
+// ==============================================================================
+// 1. Logging Configuration (Serilog)
+// ==============================================================================
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .CreateLogger();
 
 builder.Host.UseSerilog();
 
-// 2. Добавляем сервисы
+// ==============================================================================
+// 2. Services Registration
+// ==============================================================================
 builder.Services.AddControllers();
 
-// Настройка CORS для подключения фронтенда
+// Configure CORS policy for frontend client integration
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -29,25 +33,29 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Configure Entity Framework with PostgreSQL provider
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// API Explorer & Swagger Documentation
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// FluentValidation
+// FluentValidation Integration
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<TicketValidator>();
 
 var app = builder.Build();
 
-// 3. Middleware пайплайн
+// ==============================================================================
+// 3. HTTP Request Pipeline Middleware Configuration
+// ==============================================================================
 app.UseCors("AllowAll");
 
-// Обработка исключений
+// Register global exception handling middleware
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-// Применение миграций и Seed Data при старте приложения
+// Apply database migrations and seed initial data on application startup
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -55,17 +63,19 @@ using (var scope = app.Services.CreateScope())
     {
         var context = services.GetRequiredService<AppDbContext>();
 
-        // Автоматически применяем миграции и создаем таблицы в БД
+        // Automatically apply pending EF Core migrations
         context.Database.Migrate();
 
-        DbInitializer.Initialize(context);
+        // Seed initial demo tickets asynchronously
+        await DbInitializer.InitializeAsync(context);
     }
     catch (Exception ex)
     {
-        Log.Error(ex, "Ein Fehler ist beim Initialisieren der Datenbank aufgetreten.");
+        Log.Error(ex, "An error occurred while initializing or seeding the database.");
     }
 }
 
+// Enable Swagger UI only in Development environment
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -73,17 +83,19 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseAuthorization();
-
 app.MapControllers();
 
+// ==============================================================================
+// 4. Application Startup Execution
+// ==============================================================================
 try
 {
-    Log.Information("Запуск Helpdesk API...");
+    Log.Information("Starting Helpdesk API services...");
     app.Run();
 }
 catch (Exception ex)
 {
-    Log.Fatal(ex, "Приложение неожиданно остановилось из-за ошибки!");
+    Log.Fatal(ex, "Application terminated unexpectedly due to a fatal exception!");
 }
 finally
 {

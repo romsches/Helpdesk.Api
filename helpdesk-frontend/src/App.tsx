@@ -5,9 +5,13 @@ import { TicketList } from './components/TicketList';
 import { TicketForm } from './components/TicketForm';
 import { LifeBuoy, Search, Filter } from 'lucide-react';
 
+/**
+ * Root application component managing the IT Helpdesk dashboard state, 
+ * filtering, search capabilities, and CRUD operations.
+ */
 export default function App() {
     const [tickets, setTickets] = useState<Ticket[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState<boolean>(true);
     const [statusFilter, setStatusFilter] = useState<string>('All');
     const [priorityFilter, setPriorityFilter] = useState<string>('All');
     const [searchQuery, setSearchQuery] = useState<string>('');
@@ -17,7 +21,7 @@ export default function App() {
             const data = await getTickets();
             setTickets(data);
         } catch (error) {
-            console.error('Fehler beim Laden der Tickets:', error);
+            console.error('Failed to fetch tickets:', error);
         } finally {
             setLoading(false);
         }
@@ -30,40 +34,40 @@ export default function App() {
     const handleCreate = async (dto: CreateTicketDto) => {
         try {
             await createTicket(dto);
-            fetchTickets();
+            await fetchTickets();
         } catch (error) {
-            console.error('Fehler beim Erstellen:', error);
+            console.error('Failed to create ticket:', error);
         }
     };
 
     const handleStatusChange = async (id: number, newStatus: string) => {
         try {
             await updateTicketStatus(id, newStatus);
-            fetchTickets();
+            await fetchTickets();
         } catch (error) {
-            console.error('Fehler beim Aktualisieren des Status:', error);
+            console.error('Failed to update ticket status:', error);
         }
     };
 
     const handleAssigneeChange = async (id: number, assignee: string) => {
         try {
             await updateTicketAssignee(id, assignee);
-            fetchTickets();
+            await fetchTickets();
         } catch (error) {
-            console.error('Fehler beim Zuweisen des Bearbeiters:', error);
+            console.error('Failed to update ticket assignee:', error);
         }
     };
 
     const handleDelete = async (id: number) => {
         try {
             await deleteTicket(id);
-            fetchTickets();
+            await fetchTickets();
         } catch (error) {
-            console.error('Fehler beim Löschen:', error);
+            console.error('Failed to delete ticket:', error);
         }
     };
 
-    // Фильтрация по Статусу, Приоритету и Поиску
+    // Filter tickets by Status, Priority, and Search Query (Title, Description, Assignee)
     const filteredTickets = tickets.filter((ticket) => {
         const matchesStatus = statusFilter === 'All' || ticket.status === statusFilter;
         const matchesPriority = priorityFilter === 'All' || ticket.priority === priorityFilter;
@@ -89,17 +93,17 @@ export default function App() {
 
                                 < div className = "flex flex-col md:flex-row justify-between items-center gap-4 mb-6" >
                                     <h2 className="text-xl font-bold text-gray-800" >
-                                        Aktuelle Tickets < span className = "text-sm font-normal text-gray-500" > ({ filteredTickets.length }) </span>
+                                        Current Tickets < span className = "text-sm font-normal text-gray-500" > ({ filteredTickets.length }) </span>
                                             </h2>
 
-    {/* Панель поиска и фильтров */ }
+    {/* Search and Filters Panel */ }
     <div className="flex flex-wrap items-center gap-3 w-full md:w-auto" >
-    {/* Поиск */ }
+    {/* Search Input */ }
         < div className = "relative flex-1 md:w-64" >
             <Search className="absolute left-3 top-2.5 text-gray-400" size = { 16} />
                 <input
                                 type="text"
-    placeholder = "Suche nach Titel, Bearbeiter..."
+    placeholder = "Search by title, assignee..."
     value = { searchQuery }
     onChange = {(e) => setSearchQuery(e.target.value)
 }
@@ -107,7 +111,7 @@ className = "w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 te
     />
     </div>
 
-{/* Фильтр по статусу */ }
+{/* Status Filter */ }
 <div className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-lg p-1 text-sm" >
     <Filter size={ 14 } className = "text-gray-400 ml-1.5" />
         <select
@@ -115,24 +119,25 @@ className = "w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 te
 onChange = {(e) => setStatusFilter(e.target.value)}
 className = "bg-transparent border-none text-gray-900 focus:outline-none pr-2 cursor-pointer text-xs font-medium"
     >
-    <option value="All" > Alle Status </option>
-        < option value = "Open" > Offen </option>
-            < option value = "InProgress" > In Bearbeitung </option>
-                < option value = "Closed" > Geschlossen </option>
-                    </select>
-                    </div>
+    <option value="All" > All Statuses </option>
+        < option value = "Open" > Open </option>
+            < option value = "InProgress" > In Progress </option>
+                < option value = "Closed" > Closed </option>
+                    < option value = "Resolved" > Resolved </option>
+                        </select>
+                        </div>
 
-{/* Фильтр по приоритету */ }
+{/* Priority Filter */ }
 <div className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-lg p-1 text-sm" >
     <select
                                 value={ priorityFilter }
 onChange = {(e) => setPriorityFilter(e.target.value)}
 className = "bg-transparent border-none text-gray-900 focus:outline-none pr-2 cursor-pointer text-xs font-medium"
     >
-    <option value="All" > Alle Prioritäten </option>
-        < option value = "Low" > Niedrig </option>
-            < option value = "Medium" > Mittel </option>
-                < option value = "High" > Hoch </option>
+    <option value="All" > All Priorities </option>
+        < option value = "Low" > Low </option>
+            < option value = "Medium" > Medium </option>
+                < option value = "High" > High </option>
                     </select>
                     </div>
                     </div>
@@ -140,7 +145,7 @@ className = "bg-transparent border-none text-gray-900 focus:outline-none pr-2 cu
 
 {
     loading ? (
-        <p className= "text-gray-500 text-center py-8" > Lade Tickets...</p>
+        <p className= "text-gray-500 text-center py-8" > Loading tickets...</p>
                 ) : (
         <TicketList 
                         tickets= { filteredTickets }

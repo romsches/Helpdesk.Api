@@ -4,35 +4,38 @@ using Helpdesk.Api.Models;
 namespace Helpdesk.Api.Validators;
 
 /// <summary>
-/// Validierungsregeln für die Ticket-Entität unter Verwendung von FluentValidation.
-/// Garantiert die Integrität der Eingabedaten vor der Verarbeitung durch die Geschäftslogik.
+/// Defines validation rules for the <see cref="Ticket"/> entity using FluentValidation,
+/// ensuring data integrity before processing by the business logic layer.
 /// </summary>
 public class TicketValidator : AbstractValidator<Ticket>
 {
-    private static readonly string[] AllowedPriorities = { "Low", "Medium", "High" };
-    private static readonly string[] AllowedStatuses = { "Open", "InProgress", "Closed" };
+    private static readonly string[] AllowedPriorities = ["Low", "Medium", "High"];
+    private static readonly string[] AllowedStatuses = ["Open", "InProgress", "Closed", "Resolved"];
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TicketValidator"/> class.
+    /// </summary>
     public TicketValidator()
     {
-        // Validierung für den Ticket-Titel
+        // Validation for Ticket Title
         RuleFor(t => t.Title)
-            .NotEmpty().WithMessage("Der Titel ist ein Pflichtfeld und darf nicht leer sein.")
-            .MaximumLength(100).WithMessage("Der Titel darf maximal 100 Zeichen lang sein.");
+            .NotEmpty().WithMessage("The title is a required field and cannot be empty.")
+            .MaximumLength(200).WithMessage("The title cannot exceed 200 characters.");
 
-        // Validierung für die Ticket-Beschreibung
+        // Validation for Ticket Description
         RuleFor(t => t.Description)
-            .NotEmpty().WithMessage("Die Beschreibung ist ein Pflichtfeld und darf nicht leer sein.");
+            .NotEmpty().WithMessage("The description is a required field and cannot be empty.");
 
-        // Validierung für die Priorität (ignoriert Groß-/Kleinschreibung)
+        // Validation for Priority (case-insensitive)
         RuleFor(t => t.Priority)
-            .NotEmpty().WithMessage("Die Priorität ist ein Pflichtfeld.")
+            .NotEmpty().WithMessage("The priority is a required field.")
             .Must(p => AllowedPriorities.Contains(p, StringComparer.OrdinalIgnoreCase))
-            .WithMessage("Die Priorität muss einen der folgenden Werte haben: Low, Medium, High.");
+            .WithMessage("The priority must be one of the following values: Low, Medium, High.");
 
-        // Validierung für den Status (ignoriert Groß-/Kleinschreibung)
+        // Validation for Status (case-insensitive)
         RuleFor(t => t.Status)
-            .NotEmpty().WithMessage("Der Status ist ein Pflichtfeld.")
+            .NotEmpty().WithMessage("The status is a required field.")
             .Must(s => AllowedStatuses.Contains(s, StringComparer.OrdinalIgnoreCase))
-            .WithMessage("Der Status muss einen der folgenden Werte haben: Open, InProgress, Closed.");
+            .WithMessage("The status must be one of the following values: Open, InProgress, Closed, Resolved.");
     }
 }

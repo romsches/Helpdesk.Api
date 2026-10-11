@@ -1,6 +1,16 @@
+/**
+ * Defines the allowed priority levels for a support ticket.
+ */
 export type Priority = 'Low' | 'Medium' | 'High';
-export type Status = 'Open' | 'InProgress' | 'Closed';
 
+/**
+ * Defines the allowed lifecycle statuses for a support ticket.
+ */
+export type Status = 'Open' | 'InProgress' | 'Closed' | 'Resolved';
+
+/**
+ * Represents a support ticket entity within the frontend application.
+ */
 export interface Ticket {
     id: number;
     title: string;
@@ -13,6 +23,9 @@ export interface Ticket {
     resolvedAt?: string | null;
 }
 
+/**
+ * Data Transfer Object for creating a new support ticket.
+ */
 export interface CreateTicketDto {
     title: string;
     description: string;

@@ -2,42 +2,51 @@ using Helpdesk.Api.Models;
 
 namespace Helpdesk.Api.Data;
 
+/// <summary>
+/// Provides seeding logic to initialize the database with initial demo tickets
+/// if no records currently exist.
+/// </summary>
 public static class DbInitializer
 {
-    public static void Initialize(AppDbContext context)
+    /// <summary>
+    /// Initializes the database with default seed data asynchronously.
+    /// </summary>
+    /// <param name="context">The application database context.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    public static async Task InitializeAsync(AppDbContext context)
     {
-        // Проверяем, есть ли уже тикеты в базе
-        if (context.Tickets.Any())
+        // Ensure the database is created and check if any tickets already exist
+        if (await context.Tickets.AnyAsync())
         {
-            return; // База уже заполнена
+            return; // Database has already been seeded
         }
 
-        var tickets = new Ticket[]
+        var initialTickets = new Ticket[]
         {
-            new Ticket
+            new()
             {
-                Title = "Drucker im 2. Stock funktioniert nicht",
-                Description = "Der Netzwerkdrucker HP LaserJet reagiert nicht auf Druckaufträge und zeigt einen Fehlercode an.",
+                Title = "Printer on 2nd floor is not working",
+                Description = "The HP LaserJet network printer is unresponsive to print jobs and displays an error code.",
                 Priority = "High",
                 Status = "Open",
                 CreatedBy = "Anna Schmidt",
                 AssignedTo = "Unassigned",
                 CreatedAt = DateTime.UtcNow.AddHours(-3)
             },
-            new Ticket
+            new()
             {
-                Title = "VPN Verbindung bricht ab",
-                Description = "Nach ca. 10 Minuten trennt sich die VPN-Verbindung zum Firmennetzwerk automatisch.",
+                Title = "VPN connection keeps dropping",
+                Description = "After approx. 10 minutes, the VPN connection to the corporate network drops automatically.",
                 Priority = "Medium",
                 Status = "InProgress",
                 CreatedBy = "Max Mustermann",
                 AssignedTo = "Roman",
                 CreatedAt = DateTime.UtcNow.AddHours(-6)
             },
-            new Ticket
+            new()
             {
-                Title = "Passwort zurücksetzen für ERP-System",
-                Description = "Ich habe mein Passwort vergessen und kann mich nicht mehr anmelden.",
+                Title = "Password reset for ERP system",
+                Description = "I forgot my password and can no longer log into my account.",
                 Priority = "Low",
                 Status = "Closed",
                 CreatedBy = "Julia Weber",
@@ -47,7 +56,7 @@ public static class DbInitializer
             }
         };
 
-        context.Tickets.AddRange(tickets);
-        context.SaveChanges();
+        await context.Tickets.AddRangeAsync(initialTickets);
+        await context.SaveChangesAsync();
     }
 }
