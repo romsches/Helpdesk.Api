@@ -86,6 +86,38 @@ public class TicketsController : ControllerBase
     }
 
     // ---------------------------------------------------------------------------
+    // PATCH: api/tickets/5/status
+    // ---------------------------------------------------------------------------
+    /// <summary>
+    /// Ändert den Status eines Tickets und weist optional einen Bearbeiter zu.
+    /// </summary>
+    [HttpPatch("{id}/status")]
+    public async Task<IActionResult> UpdateTicketStatus(int id, [FromBody] UpdateTicketStatusDto dto)
+    {
+        var ticket = await _context.Tickets.FindAsync(id);
+        if (ticket == null)
+        {
+            return NotFound();
+        }
+
+        ticket.Status = dto.Status;
+
+        if (!string.IsNullOrEmpty(dto.AssignedTo))
+        {
+            ticket.AssignedTo = dto.AssignedTo;
+        }
+
+        if (dto.Status.Equals("Closed", StringComparison.OrdinalIgnoreCase) ||
+            dto.Status.Equals("Resolved", StringComparison.OrdinalIgnoreCase))
+        {
+            ticket.ResolvedAt = DateTime.UtcNow;
+        }
+
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+
+    // ---------------------------------------------------------------------------
     // PUT: api/tickets/5
     // ---------------------------------------------------------------------------
     /// <summary>
@@ -140,4 +172,13 @@ public class TicketsController : ControllerBase
 
         return NoContent();
     }
+}
+
+/// <summary>
+/// DTO für die Aktualisierung von Ticket-Status und Bearbeiter.
+/// </summary>
+public class UpdateTicketStatusDto
+{
+    public string Status { get; set; } = string.Empty;
+    public string? AssignedTo { get; set; }
 }

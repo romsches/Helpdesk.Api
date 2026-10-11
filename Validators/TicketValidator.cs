@@ -9,6 +9,9 @@ namespace Helpdesk.Api.Validators;
 /// </summary>
 public class TicketValidator : AbstractValidator<Ticket>
 {
+    private static readonly string[] AllowedPriorities = { "Low", "Medium", "High" };
+    private static readonly string[] AllowedStatuses = { "Open", "InProgress", "Closed" };
+
     public TicketValidator()
     {
         // Validierung für den Ticket-Titel
@@ -20,15 +23,16 @@ public class TicketValidator : AbstractValidator<Ticket>
         RuleFor(t => t.Description)
             .NotEmpty().WithMessage("Die Beschreibung ist ein Pflichtfeld und darf nicht leer sein.");
 
-        // Validierung für die Priorität (zulässige Werte: Low, Medium, High)
+        // Validierung für die Priorität (ignoriert Groß-/Kleinschreibung)
         RuleFor(t => t.Priority)
             .NotEmpty().WithMessage("Die Priorität ist ein Pflichtfeld.")
-            .Must(p => new[] { "Low", "Medium", "High" }.Contains(p))
+            .Must(p => AllowedPriorities.Contains(p, StringComparer.OrdinalIgnoreCase))
             .WithMessage("Die Priorität muss einen der folgenden Werte haben: Low, Medium, High.");
 
-        // Validierung für den Status (zulässige Werte: Open, InProgress, Closed)
+        // Validierung für den Status (ignoriert Groß-/Kleinschreibung)
         RuleFor(t => t.Status)
-            .Must(s => new[] { "Open", "InProgress", "Closed" }.Contains(s))
+            .NotEmpty().WithMessage("Der Status ist ein Pflichtfeld.")
+            .Must(s => AllowedStatuses.Contains(s, StringComparer.OrdinalIgnoreCase))
             .WithMessage("Der Status muss einen der folgenden Werte haben: Open, InProgress, Closed.");
     }
 }

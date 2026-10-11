@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  postgres-db:
+    image: postgres:16-alpine
+    container_name: helpdesk_postgres
+    environment:
+      POSTGRES_DB: helpdesk_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  helpdesk-api:
+    build: .
+    container_name: helpdesk_api_container
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings:DefaultConnection=Host=postgres-db;Port=5432;Database=helpdesk_db;Username=postgres;Password=postgrespassword
+    ports:
+      - "5208:8080"
+    depends_on:
+      - postgres-db
+    restart: always
+
+volumes:
+    postgres_data:

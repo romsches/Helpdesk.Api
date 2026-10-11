@@ -8,7 +8,7 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Настраиваем Serilog для красивого логирования в консоль
+// 1. Настраиваем Serilog для логирования
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .CreateLogger();
@@ -17,6 +17,17 @@ builder.Host.UseSerilog();
 
 // 2. Добавляем сервисы
 builder.Services.AddControllers();
+
+// Настройка CORS для подключения фронтенда
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -33,13 +44,15 @@ var app = builder.Build();
 // 3. Middleware пайплайн
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
+// Включаем CORS
+app.UseCors("AllowAll");
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 
