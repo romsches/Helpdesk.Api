@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres-db:
     image: postgres:16-alpine
@@ -13,18 +11,33 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d helpdesk_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   helpdesk-api:
     build: .
     container_name: helpdesk_api_container
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings:DefaultConnection=Host=postgres-db;Port=5432;Database=helpdesk_db;Username=postgres;Password=postgrespassword
+      - ConnectionStrings__DefaultConnection=Host=postgres-db;Port=5432;Database=helpdesk_db;Username=postgres;Password=postgrespassword
     ports:
       - "5208:8080"
     depends_on:
-      - postgres-db
+      postgres-db:
+        condition: service_healthy
+    restart: always
+
+  helpdesk-frontend:
+    build: ./helpdesk-frontend
+    container_name: helpdesk_frontend_container
+    ports:
+      - "5173:80"
+    depends_on:
+      - helpdesk-api
     restart: always
 
 volumes:
-    postgres_data:
+  postgres_data:

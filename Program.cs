@@ -42,10 +42,29 @@ builder.Services.AddValidatorsFromAssemblyContaining<TicketValidator>();
 var app = builder.Build();
 
 // 3. Middleware пайплайн
+app.UseCors("AllowAll");
+
+// Обработка исключений
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-// Включаем CORS
-app.UseCors("AllowAll");
+// Применение миграций и Seed Data при старте приложения
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<AppDbContext>();
+
+        // Автоматически применяем миграции и создаем таблицы в БД
+        context.Database.Migrate();
+
+        DbInitializer.Initialize(context);
+    }
+    catch (Exception ex)
+    {
+        Log.Error(ex, "Ein Fehler ist beim Initialisieren der Datenbank aufgetreten.");
+    }
+}
 
 if (app.Environment.IsDevelopment())
 {
@@ -54,6 +73,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseAuthorization();
+
 app.MapControllers();
 
 try

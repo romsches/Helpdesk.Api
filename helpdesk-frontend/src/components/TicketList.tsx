@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { Ticket, Priority } from '../types/ticket';
-import { Trash2, UserCheck } from 'lucide-react';
+import { Trash2, UserCheck, Eye } from 'lucide-react';
+import { TicketModal } from './TicketModal';
 
 interface TicketListProps {
     tickets: Ticket[];
@@ -28,6 +29,8 @@ export const TicketList: React.FC<TicketListProps> = ({
     onAssigneeChange,
     onDelete
 }) => {
+    const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+
     if (tickets.length === 0) {
         return (
             <div className= "bg-white p-8 rounded-lg shadow-sm border border-gray-200 text-center text-gray-500" >
@@ -37,19 +40,26 @@ export const TicketList: React.FC<TicketListProps> = ({
   }
 
 return (
+    <>
     <div className= "grid gap-4 md:grid-cols-2 lg:grid-cols-3" >
     {
         tickets.map((ticket) => (
             <TicketCard 
-          key= { ticket.id } 
-          ticket = { ticket } 
-          onStatusChange = { onStatusChange }
-          onAssigneeChange = { onAssigneeChange }
-          onDelete = { onDelete }
-            />
-      ))
-    }
-    </div>
+            key= { ticket.id } 
+            ticket = { ticket } 
+            onStatusChange = { onStatusChange }
+            onAssigneeChange = { onAssigneeChange }
+            onDelete = { onDelete }
+            onViewDetails = {() => setSelectedTicket(ticket)}
+    />
+        ))}
+</div>
+
+    < TicketModal
+ticket = { selectedTicket }
+onClose = {() => setSelectedTicket(null)} 
+      />
+    </>
   );
 };
 
@@ -58,9 +68,10 @@ interface TicketCardProps {
     onStatusChange: (id: number, newStatus: string) => void;
     onAssigneeChange: (id: number, assignee: string) => void;
     onDelete: (id: number) => void;
+    onViewDetails: () => void;
 }
 
-const TicketCard: React.FC<TicketCardProps> = ({ ticket, onStatusChange, onAssigneeChange, onDelete }) => {
+const TicketCard: React.FC<TicketCardProps> = ({ ticket, onStatusChange, onAssigneeChange, onDelete, onViewDetails }) => {
     const [assigneeInput, setAssigneeInput] = useState(ticket.assignedTo || '');
 
     const handleAssigneeBlur = () => {
@@ -73,8 +84,14 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onStatusChange, onAssig
         <div className= "bg-white p-5 rounded-lg shadow-sm border border-gray-200 flex flex-col justify-between hover:shadow-md transition" >
         <div>
         <div className="flex justify-between items-start mb-2 gap-2" >
-            <h3 className="font-bold text-gray-800 break-words flex-1" > { ticket.title } </h3>
-                < span className = {`text-xs px-2.5 py-1 rounded-full font-semibold border ${getPriorityBadgeClass(ticket.priority)}`
+            <h3 
+            onClick={ onViewDetails }
+    className = "font-bold text-gray-800 break-words flex-1 cursor-pointer hover:text-blue-600 transition"
+    title = "Details anzeigen"
+        >
+    { ticket.title }
+        </h3>
+        < span className = {`text-xs px-2.5 py-1 rounded-full font-semibold border ${getPriorityBadgeClass(ticket.priority)}`
 }>
 { ticket.priority }
     </span>
@@ -84,8 +101,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onStatusChange, onAssig
         </div>
 
         < div className = "space-y-3 pt-3 border-t border-gray-100" >
-        {/* Исполнитель (AssignedTo) */ }
-            < div className = "flex items-center gap-2" >
+            <div className="flex items-center gap-2" >
                 <UserCheck size={ 16 } className = "text-gray-400" />
                     <input
             type="text"
@@ -98,9 +114,8 @@ className = "w-full bg-gray-50 border border-gray-200 rounded px-2 py-1 text-xs 
     </div>
 
     < div className = "flex items-center justify-between gap-2" >
-    {/* Статус */ }
-        < select
-value = { ticket.status }
+        <select
+            value={ ticket.status }
 onChange = {(e) => onStatusChange(ticket.id, e.target.value)}
 className = "bg-gray-50 border border-gray-300 rounded px-2.5 py-1.5 text-xs font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
     >
@@ -109,14 +124,22 @@ className = "bg-gray-50 border border-gray-300 rounded px-2.5 py-1.5 text-xs fon
             < option value = "Closed" > Geschlossen </option>
                 </select>
 
-{/* Кнопка удаления */ }
-<button
-            onClick={ () => onDelete(ticket.id) }
+                < div className = "flex items-center gap-1" >
+                    <button
+              onClick={ onViewDetails }
+className = "p-1.5 text-gray-400 hover:text-blue-600 rounded transition"
+title = "Details anzeigen"
+    >
+    <Eye size={ 16 } />
+        </button>
+        < button
+onClick = {() => onDelete(ticket.id)}
 className = "p-1.5 text-gray-400 hover:text-red-600 rounded transition"
 title = "Ticket löschen"
     >
     <Trash2 size={ 16 } />
         </button>
+        </div>
         </div>
         </div>
         </div>
