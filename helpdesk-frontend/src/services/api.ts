@@ -20,6 +20,13 @@ export const updateTicketStatus = async (id: number, status: string) => {
     return response.data;
 };
 
+export const updateTicketAssignee = async (id: number, assignedTo: string) => {
+    const response = await axios.patch(`${API_URL}/${id}/assign`, { assignedTo }, {
+        headers: { 'Content-Type': 'application/json' }
+    });
+    return response.data;
+};
+
 export const deleteTicket = async (id: number) => {
     await axios.delete(`${API_URL}/${id}`);
 };

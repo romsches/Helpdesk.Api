@@ -118,6 +118,27 @@ public class TicketsController : ControllerBase
     }
 
     // ---------------------------------------------------------------------------
+    // PATCH: api/tickets/5/assign
+    // ---------------------------------------------------------------------------
+    /// <summary>
+    /// Aktualisiert den Bearbeiter (AssignedTo) eines Tickets.
+    /// </summary>
+    [HttpPatch("{id}/assign")]
+    public async Task<IActionResult> UpdateTicketAssignee(int id, [FromBody] UpdateTicketAssigneeDto dto)
+    {
+        var ticket = await _context.Tickets.FindAsync(id);
+        if (ticket == null)
+        {
+            return NotFound();
+        }
+
+        ticket.AssignedTo = string.IsNullOrWhiteSpace(dto.AssignedTo) ? "Unassigned" : dto.AssignedTo;
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    // ---------------------------------------------------------------------------
     // PUT: api/tickets/5
     // ---------------------------------------------------------------------------
     /// <summary>
@@ -180,5 +201,13 @@ public class TicketsController : ControllerBase
 public class UpdateTicketStatusDto
 {
     public string Status { get; set; } = string.Empty;
+    public string? AssignedTo { get; set; }
+}
+
+/// <summary>
+/// DTO für die Zuweisung eines Bearbeiters.
+/// </summary>
+public class UpdateTicketAssigneeDto
+{
     public string? AssignedTo { get; set; }
 }

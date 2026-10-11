@@ -1,76 +1,124 @@
-import React from 'react';
-import type { Ticket } from '../types/ticket';
-import { Trash2, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import type { Ticket, Priority } from '../types/ticket';
+import { Trash2, UserCheck } from 'lucide-react';
 
 interface TicketListProps {
     tickets: Ticket[];
     onStatusChange: (id: number, newStatus: string) => void;
+    onAssigneeChange: (id: number, assignee: string) => void;
     onDelete: (id: number) => void;
 }
 
-export const TicketList: React.FC<TicketListProps> = ({ tickets, onStatusChange, onDelete }) => {
-    if (tickets.length === 0) {
-        return <div className="text-gray-500 text-center py-6" > Keine Tickets vorhanden.</div>;
+const getPriorityBadgeClass = (priority: Priority) => {
+    switch (priority) {
+        case 'High':
+            return 'bg-red-100 text-red-700 border-red-200';
+        case 'Medium':
+            return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+        case 'Low':
+            return 'bg-green-100 text-green-700 border-green-200';
+        default:
+            return 'bg-gray-100 text-gray-700 border-gray-200';
     }
+};
 
-    const getPriorityBadge = (priority: string) => {
-        switch (priority) {
-            case 'High': return <span className="px-2 py-1 text-xs font-bold text-red-700 bg-red-100 rounded" > Hoch </span>;
-            case 'Medium': return <span className="px-2 py-1 text-xs font-bold text-yellow-700 bg-yellow-100 rounded" > Mittel </span>;
-            default: return <span className="px-2 py-1 text-xs font-bold text-green-700 bg-green-100 rounded" > Niedrig </span>;
-        }
-    };
+export const TicketList: React.FC<TicketListProps> = ({
+    tickets,
+    onStatusChange,
+    onAssigneeChange,
+    onDelete
+}) => {
+    if (tickets.length === 0) {
+        return (
+            <div className= "bg-white p-8 rounded-lg shadow-sm border border-gray-200 text-center text-gray-500" >
+            Keine Tickets vorhanden.
+      </div>
+    );
+  }
 
-    const getStatusBadge = (status: string) => {
-        switch (status) {
-            case 'Closed': return <span className="flex items-center gap-1 text-gray-600 bg-gray-100 px-2 py-1 rounded text-xs font-semibold" > <CheckCircle size={ 14 } /> Geschlossen</span >;
-            case 'InProgress': return <span className="flex items-center gap-1 text-blue-600 bg-blue-100 px-2 py-1 rounded text-xs font-semibold" > <Clock size={ 14 } /> In Bearbeitung</span >;
-            default: return <span className="flex items-center gap-1 text-orange-600 bg-orange-100 px-2 py-1 rounded text-xs font-semibold" > <AlertCircle size={ 14 } /> Offen</span >;
+return (
+    <div className= "grid gap-4 md:grid-cols-2 lg:grid-cols-3" >
+    {
+        tickets.map((ticket) => (
+            <TicketCard 
+          key= { ticket.id } 
+          ticket = { ticket } 
+          onStatusChange = { onStatusChange }
+          onAssigneeChange = { onAssigneeChange }
+          onDelete = { onDelete }
+            />
+      ))
+    }
+    </div>
+  );
+};
+
+interface TicketCardProps {
+    ticket: Ticket;
+    onStatusChange: (id: number, newStatus: string) => void;
+    onAssigneeChange: (id: number, assignee: string) => void;
+    onDelete: (id: number) => void;
+}
+
+const TicketCard: React.FC<TicketCardProps> = ({ ticket, onStatusChange, onAssigneeChange, onDelete }) => {
+    const [assigneeInput, setAssigneeInput] = useState(ticket.assignedTo || '');
+
+    const handleAssigneeBlur = () => {
+        if (assigneeInput !== (ticket.assignedTo || '')) {
+            onAssigneeChange(ticket.id, assigneeInput);
         }
     };
 
     return (
-        <div className= "grid gap-4 md:grid-cols-2 lg:grid-cols-3" >
-        {
-            tickets.map((ticket) => (
-                <div key= { ticket.id } className = "bg-white p-5 rounded-lg shadow border border-gray-200 flex flex-col justify-between" >
-                <div>
-                <div className="flex justify-between items-start mb-2" >
-            <h3 className="font-bold text-lg text-gray-800" > { ticket.title } </h3>
-              { getPriorityBadge(ticket.priority)
-        }
+        <div className= "bg-white p-5 rounded-lg shadow-sm border border-gray-200 flex flex-col justify-between hover:shadow-md transition" >
+        <div>
+        <div className="flex justify-between items-start mb-2 gap-2" >
+            <h3 className="font-bold text-gray-800 break-words flex-1" > { ticket.title } </h3>
+                < span className = {`text-xs px-2.5 py-1 rounded-full font-semibold border ${getPriorityBadgeClass(ticket.priority)}`
+}>
+{ ticket.priority }
+    </span>
+    </div>
+
+    < p className = "text-gray-600 text-sm mb-4 line-clamp-3" > { ticket.description } </p>
         </div>
-        < p className = "text-gray-600 text-sm mb-4 line-clamp-3" > { ticket.description } </p>
-            </div>
 
-            < div >
-            <div className="flex items-center justify-between mb-4" >
-            { getStatusBadge(ticket.status) }
-                < span className = "text-xs text-gray-400" > ID: #{ ticket.id } </span>
-                    </div>
+        < div className = "space-y-3 pt-3 border-t border-gray-100" >
+        {/* Исполнитель (AssignedTo) */ }
+            < div className = "flex items-center gap-2" >
+                <UserCheck size={ 16 } className = "text-gray-400" />
+                    <input
+            type="text"
+placeholder = "Zugewiesen an..."
+value = { assigneeInput }
+onChange = {(e) => setAssigneeInput(e.target.value)}
+onBlur = { handleAssigneeBlur }
+className = "w-full bg-gray-50 border border-gray-200 rounded px-2 py-1 text-xs text-gray-800 focus:outline-none focus:bg-white focus:border-blue-500"
+    />
+    </div>
 
-                    < div className = "flex items-center justify-between pt-3 border-t border-gray-100" >
-                        <select
-                value={ ticket.status }
-    onChange = {(e) => onStatusChange(ticket.id, e.target.value)}
-className = "text-xs border border-gray-300 rounded px-2 py-1 bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500"
+    < div className = "flex items-center justify-between gap-2" >
+    {/* Статус */ }
+        < select
+value = { ticket.status }
+onChange = {(e) => onStatusChange(ticket.id, e.target.value)}
+className = "bg-gray-50 border border-gray-300 rounded px-2.5 py-1.5 text-xs font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
     >
     <option value="Open" > Offen </option>
         < option value = "InProgress" > In Bearbeitung </option>
             < option value = "Closed" > Geschlossen </option>
                 </select>
 
-                < button
-onClick = {() => onDelete(ticket.id)}
-className = "text-red-500 hover:text-red-700 p-1 rounded transition"
-title = "Löschen"
+{/* Кнопка удаления */ }
+<button
+            onClick={ () => onDelete(ticket.id) }
+className = "p-1.5 text-gray-400 hover:text-red-600 rounded transition"
+title = "Ticket löschen"
     >
     <Trash2 size={ 16 } />
         </button>
         </div>
         </div>
         </div>
-      ))}
-</div>
   );
 };
