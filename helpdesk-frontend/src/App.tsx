@@ -3,11 +3,13 @@ import { getTickets, createTicket, updateTicketStatus, deleteTicket } from './se
 import type { Ticket, CreateTicketDto } from './types/ticket';
 import { TicketList } from './components/TicketList';
 import { TicketForm } from './components/TicketForm';
-import { LifeBuoy } from 'lucide-react';
+import { LifeBuoy, Search, Filter } from 'lucide-react';
 
 export default function App() {
     const [tickets, setTickets] = useState<Ticket[]>([]);
     const [loading, setLoading] = useState(true);
+    const [statusFilter, setStatusFilter] = useState<string>('All');
+    const [searchQuery, setSearchQuery] = useState<string>('');
 
     const fetchTickets = async () => {
         try {
@@ -51,6 +53,15 @@ export default function App() {
         }
     };
 
+    // Фильтрация и поиск тикетов
+    const filteredTickets = tickets.filter((ticket) => {
+        const matchesStatus = statusFilter === 'All' || ticket.status === statusFilter;
+        const matchesSearch =
+            ticket.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            ticket.description.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesStatus && matchesSearch;
+    });
+
     return (
         <div className= "min-h-screen bg-gray-100 text-gray-900 pb-12" >
         <header className="bg-white shadow border-b border-gray-200 mb-8" >
@@ -63,15 +74,53 @@ export default function App() {
                         < main className = "max-w-7xl mx-auto px-4" >
                             <TicketForm onCreate={ handleCreate } />
 
-                                < h2 className = "text-xl font-bold text-gray-800 mb-4" > Aktuelle Tickets </h2>
-    {
-        loading ? (
-            <p className= "text-gray-500" > Lade Tickets...</p>
-        ) : (
-            <TicketList tickets= { tickets } onStatusChange = { handleStatusChange } onDelete = { handleDelete } />
-        )
-    }
-    </main>
-        </div>
-  );
+                                < div className = "flex flex-col md:flex-row justify-between items-center gap-4 mb-6" >
+                                    <h2 className="text-xl font-bold text-gray-800" >
+                                        Aktuelle Tickets < span className = "text-sm font-normal text-gray-500" > ({ filteredTickets.length }) </span>
+                                            </h2>
+
+    {/* Панель поиска и фильтров */ }
+    <div className="flex flex-wrap items-center gap-3 w-full md:w-auto" >
+        <div className="relative flex-1 md:w-64" >
+            <Search className="absolute left-3 top-2.5 text-gray-400" size = { 16} />
+                <input
+                                type="text"
+    placeholder = "Suche nach Titel..."
+    value = { searchQuery }
+    onChange = {(e) => setSearchQuery(e.target.value)
+}
+className = "w-full bg-white border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
+    </div>
+
+    < div className = "flex items-center gap-1.5 bg-white border border-gray-300 rounded-lg p-1 text-sm" >
+        <Filter size={ 14 } className = "text-gray-400 ml-1.5" />
+            <select
+                                value={ statusFilter }
+onChange = {(e) => setStatusFilter(e.target.value)}
+className = "bg-transparent border-none text-gray-900 focus:outline-none pr-2 cursor-pointer text-xs font-medium"
+    >
+    <option value="All" > Alle Status </option>
+        < option value = "Open" > Offen </option>
+            < option value = "InProgress" > In Bearbeitung </option>
+                < option value = "Closed" > Geschlossen </option>
+                    </select>
+                    </div>
+                    </div>
+                    </div>
+
+{
+    loading ? (
+        <p className= "text-gray-500 text-center py-8" > Lade Tickets...</p>
+                ) : (
+        <TicketList 
+                        tickets= { filteredTickets }
+    onStatusChange = { handleStatusChange }
+    onDelete = { handleDelete }
+        />
+                )
+}
+</main>
+    </div>
+    );
 }
