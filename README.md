@@ -132,9 +132,9 @@ A detailed view of a selected ticket, including its metadata, creator, assigned 
 
 ### 4. Ticket Filtering and Search
 
-![Ticket Filtering and Search](screenshots/04_filtering_and_search.jpg)
+![Ticket Filtering and Search](screenshots/04_filtering_and_search.png)
 
-The interface demonstrates how users can search for relevant support tickets and narrow down the displayed results.
+The interface demonstrates how users can search for tickets and filter the results.
 
 ### 5. Empty Search Results
 
