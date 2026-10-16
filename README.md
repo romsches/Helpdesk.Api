@@ -1,201 +1,245 @@
-# Mini Helpdesk / Ticket-System – Backend & API
+# Mini Helpdesk – Ticket Management API
 
-Eine containerisierte Helpdesk- und Ticket-Management-Anwendung mit C#, ASP.NET Core 10 Web API, Entity Framework Core und PostgreSQL. Das Projekt demonstriert die Entwicklung einer REST-API, die Speicherung relationaler Daten sowie typische IT-Support-Prozesse – von der Erstellung und Priorisierung von Tickets bis hin zur Statusverwaltung und Zuweisung an Support-Mitarbeiter.
+A containerized IT helpdesk and ticket management application built with **C#, ASP.NET Core 10 Web API, Entity Framework Core, and PostgreSQL**. This project demonstrates REST API development, relational data persistence, request validation, centralized exception handling, structured logging, and containerized deployment with Docker Compose.
 
-## Inhaltsverzeichnis
+## Table of Contents
 
-- [Projektübersicht](#projektübersicht)
-- [Technologie-Stack](#technologie-stack)
-- [Architektur und Projektstruktur](#architektur-und-projektstruktur)
-- [Funktionalitäten](#funktionalitäten)
-- [Installation und Start](#installation-und-start)
-- [REST-API und Swagger](#rest-api-und-swagger)
-- [Mögliche Erweiterungen](#mögliche-erweiterungen)
+- [Project Overview](#project-overview)
+- [Features](#features)
+- [Technology Stack](#technology-stack)
+- [Architecture](#architecture)
+- [Screenshots](#screenshots)
+- [Getting Started](#getting-started)
+- [REST API Documentation](#rest-api-documentation)
+- [Potential Improvements](#potential-improvements)
 - [Repository](#repository)
 
-## Projektübersicht
+## Project Overview
 
-Die Anwendung stellt eine REST-API für die Verwaltung von IT-Support-Anfragen bereit. Tickets können mit einem Titel, einer Beschreibung und einer Priorität erstellt werden. Darüber hinaus unterstützt das Backend die Abfrage, Filterung und Bearbeitung von Tickets sowie die Verwaltung ihres Status und ihrer Zuweisung.
+Mini Helpdesk is a backend-focused application for managing IT support requests. It provides a REST API that enables clients to create, retrieve, filter, update, assign, and delete support tickets.
 
-Die Anwendung bildet grundlegende Abläufe eines IT-Helpdesks ab und ermöglicht die Kommunikation zwischen Clients und Backend über HTTP und JSON.
+Tickets contain information such as a title, description, status, priority, creator, and assigned support employee. The application also supports tracking ticket resolution through a `ResolvedAt` timestamp.
 
-Die Komponenten werden mithilfe von Docker Compose gemeinsam gestartet.
+The backend uses Entity Framework Core to interact with a PostgreSQL database. The API exposes its functionality through HTTP and JSON, while Docker Compose coordinates the application and database containers.
 
-**Projektziele:**
+### Project Objectives
 
-- Entwicklung einer REST-API mit C# und ASP.NET Core 10
-- Strukturierung des Backends nach den Prinzipien einer geschichteten Architektur
-- Datenpersistenz mit Entity Framework Core und PostgreSQL
-- Umsetzung typischer IT-Support- und Ticket-Management-Prozesse
-- Validierung von Eingabedaten mit FluentValidation
-- Implementierung einer zentralen Fehlerbehandlung
-- Containerisierung mit Docker und Docker Compose
-- Dokumentation und Testen der API mit Swagger UI
+- Develop a RESTful API using C# and ASP.NET Core 10.
+- Organize backend components using a layered structure.
+- Implement relational data persistence with Entity Framework Core and PostgreSQL.
+- Model common IT support and ticket management workflows.
+- Validate incoming data using FluentValidation.
+- Handle exceptions through centralized middleware.
+- Implement application logging with Serilog.
+- Containerize the backend and database using Docker Compose.
+- Document and test API endpoints through Swagger UI.
 
-## Technologie-Stack
+## Features
 
-### Backend
+### Ticket Management
 
-- C#
-- ASP.NET Core 10 Web API
-- Entity Framework Core
-- FluentValidation
-- Serilog
-- REST-API
-- Swagger / OpenAPI
+- Create support tickets with a title, description, and priority.
+- Retrieve all tickets or a specific ticket by ID.
+- Filter tickets by status and priority.
+- Update ticket information and status.
+- Assign tickets to support employees.
+- Delete tickets.
+- Track ticket creation and resolution timestamps.
 
-### Datenbank und Infrastruktur
+### Validation and Error Handling
 
-- PostgreSQL
-- Docker
-- Docker Compose
+- Validate incoming request data before processing.
+- Check ticket fields against the configured validation rules.
+- Handle application exceptions through centralized middleware.
+- Record relevant application events and errors using Serilog.
 
-### Entwicklung und Dokumentation
+### Database and Infrastructure
 
-- Git
-- GitHub
-- Swagger UI
+- Persist ticket data in PostgreSQL.
+- Access relational data through Entity Framework Core.
+- Run the backend and database with Docker Compose.
+- Store database data in a persistent Docker volume.
+- Explore and test API endpoints using Swagger UI.
 
-## Architektur und Projektstruktur
+## Technology Stack
 
-Das Backend folgt einer geschichteten Struktur mit klar getrennten Verantwortlichkeiten. Die API verarbeitet eingehende HTTP-Anfragen, die Datenmodelle bilden die Support-Tickets ab und Entity Framework Core übernimmt den Zugriff auf die Datenbank.
+| Category | Technologies |
+|---|---|
+| Language | C# |
+| Backend | ASP.NET Core 10 Web API |
+| Data Access | Entity Framework Core |
+| Database | PostgreSQL |
+| Validation | FluentValidation |
+| Logging | Serilog |
+| API Documentation | Swagger / OpenAPI |
+| Containerization | Docker, Docker Compose |
+| Version Control | Git, GitHub |
 
-FluentValidation dient der Prüfung eingehender Daten. Eine zentrale Middleware ermöglicht eine einheitliche Behandlung von Fehlern. Serilog unterstützt die Protokollierung der Anwendung.
+## Architecture
 
-Die Projektstruktur orientiert sich an folgender Organisation:
+The application separates HTTP request handling, data access, validation, and error handling into dedicated components.
+
+- **API Layer:** Controllers handle incoming HTTP requests and return API responses.
+- **Data Access:** Entity Framework Core manages database operations.
+- **Data Model:** The `Ticket` entity represents support tickets and their properties.
+- **Validation:** FluentValidation checks incoming data.
+- **Exception Handling:** Custom middleware centralizes exception handling.
+- **Logging:** Serilog records relevant application events and errors.
+- **Infrastructure:** Docker Compose coordinates the API and PostgreSQL services.
+
+### Project Structure
 
 ```text
-mini-helpdesk/
-├── Helpdesk.Api/
-│   ├── Controllers/
-│   │   └── TicketsController.cs
-│   ├── Data/
-│   │   └── AppDbContext.cs
-│   ├── Models/
-│   │   └── Ticket.cs
-│   ├── Validators/
-│   │   └── TicketValidator.cs
-│   ├── Middleware/
-│   │   └── ExceptionHandlingMiddleware.cs
-│   ├── Dockerfile
-│   └── ...
+Helpdesk.Api/
+├── Controllers/
+│   └── TicketsController.cs
+├── Data/
+│   └── AppDbContext.cs
+├── Models/
+│   └── Ticket.cs
+├── Validators/
+│   └── TicketValidator.cs
+├── Middleware/
+│   └── ExceptionHandlingMiddleware.cs
+├── Dockerfile
 ├── docker-compose.yml
 └── README.md
 ```
 
-Die genaue Verzeichnisstruktur kann je nach aktuellem Entwicklungsstand abweichen.
+The structure above illustrates the main components. Additional files and directories may be present in the repository.
 
-## Funktionalitäten
+## Screenshots
 
-### Ticket-Verwaltung
+The following screenshots demonstrate the application's user interface, ticket management workflow, and REST API documentation.
 
-- Tickets mit Titel, Beschreibung und Priorität erstellen
-- Standardwerte für nicht angegebene Angaben wie Ersteller und Bearbeiter verwenden
-- Alle Tickets abrufen
-- Einzelne Tickets anhand ihrer ID abrufen
-- Tickets nach Status filtern
-- Status eines Tickets aktualisieren
-- Tickets einem Bearbeiter zuweisen
-- Tickets löschen
+### 1. Dashboard Overview
 
-### Validierung und Fehlerbehandlung
+![Helpdesk Dashboard Overview](screenshots/01_dashboard_overview.jpg)
 
-- Eingabedaten vor der Verarbeitung validieren
-- Titel, Beschreibung und Priorität auf zulässige Werte prüfen
-- Fehler zentral über eine Middleware behandeln
-- Anwendungsereignisse und Fehler protokollieren
+The main dashboard displays existing support tickets, filtering controls, and the ticket creation form.
 
-### Backend und Datenbank
+### 2. Create a Support Ticket
 
-- REST-Endpunkte für die Kommunikation über HTTP und JSON
-- Datenbankzugriff mit Entity Framework Core
-- Speicherung von Tickets in PostgreSQL
-- Erfassung des Lösungszeitpunkts (`ResolvedAt`) beim Abschließen eines Tickets
-- Interaktive API-Dokumentation mit Swagger UI
+![Create Support Ticket](screenshots/02_create_ticket_form.jpg)
 
-### Containerisierung
+The ticket creation form with its title, description, and priority fields configured before submission.
 
-- Backend und PostgreSQL über Docker Compose starten
-- Dienste in einem isolierten Containernetzwerk betreiben
-- PostgreSQL-Daten über ein persistentes Docker-Volume speichern
+### 3. Ticket Details
 
-## Installation und Start
+![Ticket Details Modal](screenshots/03_ticket_details_modal.png)
 
-### Voraussetzungen
+A detailed view of a selected ticket, including its metadata, creator, assigned employee, and creation timestamp.
 
-- Git
-- Docker Desktop
+### 4. Ticket Filtering and Search
 
-### 1. Repository klonen
+![Ticket Filtering and Search](screenshots/04_filtering_and_search.jpg)
+
+The interface demonstrates how users can search for relevant support tickets and narrow down the displayed results.
+
+### 5. Empty Search Results
+
+![Empty Search Results](screenshots/05_search_empty_state.jpg)
+
+The empty state displayed when the current search or filtering criteria return no matching tickets.
+
+### 6. REST API Overview
+
+![Swagger API Overview](screenshots/06_swagger_api_overview.jpg)
+
+Swagger UI provides an overview of the available API endpoints and their HTTP methods.
+
+### 7. Data Transfer Object Schemas
+
+![Swagger DTO Schemas](screenshots/07_swagger_dto_schemas.jpg)
+
+The schema section documents the ticket model and request DTOs used by the API.
+
+### 8. Create Ticket API Request
+
+![Swagger Create Ticket Request](screenshots/08_swagger_post_create_ticket_example.jpg)
+
+Swagger UI example for `POST /api/Tickets`, showing the JSON request body and the documented API response.
+
+## Getting Started
+
+### Prerequisites
+
+- [Git](https://git-scm.com/)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/romsches/mini-helpdesk.git
 cd mini-helpdesk
 ```
 
-### 2. Docker Desktop starten
+### 2. Start Docker Desktop
 
-Stelle sicher, dass Docker Desktop gestartet ist und Docker-Container ausgeführt werden können.
+Make sure Docker Desktop is running and the Docker engine is available.
 
-### 3. Anwendung starten
+### 3. Build and Start the Application
 
-Führe im Projektverzeichnis folgenden Befehl aus:
+From the directory containing `docker-compose.yml`, run:
 
 ```bash
 docker compose up --build -d
 ```
 
-Docker Compose erstellt die benötigten Images und startet die in der Compose-Datei definierten Dienste.
+Docker Compose builds the required images and starts the services defined in the Compose configuration.
 
-### 4. Anwendung öffnen
+### 4. Open Swagger UI
 
-| Komponente | Adresse |
-|---|---|
-| Backend und Swagger UI | http://localhost:5208/swagger/index.html |
+If the API is configured to publish port `5208` on the host, open:
 
-Die angegebene Adresse setzt voraus, dass der API-Port in der Docker-Konfiguration entsprechend veröffentlicht wird.
+[http://localhost:5208/swagger/index.html](http://localhost:5208/swagger/index.html)
 
-### Anwendung stoppen
+### Stop the Application
 
 ```bash
 docker compose down
 ```
 
-Dieser Befehl stoppt und entfernt die zugehörigen Container und das Compose-Netzwerk. Das Datenbankvolume wird dabei nicht ausdrücklich gelöscht.
+This command stops and removes the containers and Compose network. The persistent database volume is not explicitly deleted.
 
-**Hinweis:** Verwende `docker compose down -v` nicht, wenn du die gespeicherten Daten behalten möchtest.
+**Note:** Avoid `docker compose down -v` if you want to retain the database volume and its stored data.
 
-## REST-API und Swagger
+## REST API Documentation
 
-Die REST-API ermöglicht die Verwaltung von Support-Tickets über HTTP-Anfragen. Swagger UI stellt die dokumentierten Endpunkte übersichtlich dar und erlaubt es, Requests direkt im Browser auszuführen und die API-Antworten zu überprüfen.
+The API exposes HTTP endpoints for managing support tickets. Swagger UI documents the available routes, request parameters, schemas, and responses. It also allows requests to be executed directly from the browser.
 
-**Swagger UI:** http://localhost:5208/swagger/index.html
+The API operations include:
 
-Die verfügbaren Endpunkte umfassen entsprechend der Implementierung unter anderem:
-
-| HTTP-Methode | Funktion |
+| HTTP Method | Purpose |
 |---|---|
-| `GET` | Tickets abrufen |
-| `GET` | Einzelnes Ticket anhand der ID abrufen |
-| `POST` | Neues Ticket erstellen |
-| `PATCH` | Ticketstatus oder Bearbeiter aktualisieren |
-| `DELETE` | Ticket löschen |
+| `GET` | Retrieve tickets |
+| `GET` | Retrieve a ticket by ID |
+| `POST` | Create a ticket |
+| `PUT` | Update ticket information |
+| `PATCH` | Update selected ticket properties, such as status |
+| `DELETE` | Delete a ticket |
 
-Die konkreten Routen und Parameter sind der Swagger-Dokumentation der laufenden Anwendung zu entnehmen.
+The exact routes, parameters, request bodies, and response codes depend on the current implementation. Consult Swagger UI for the authoritative API specification.
 
-## Mögliche Erweiterungen
+## Potential Improvements
 
-- React- und TypeScript-Frontend für die Ticketverwaltung
-- JWT-basierte Authentifizierung
-- Rollenbasierte Autorisierung für Benutzer und Support-Mitarbeiter
-- Erweiterte Such-, Filter- und Sortierfunktionen
-- Unit- und Integrationstests
-- CI/CD-Pipeline für automatisierte Builds und Tests
-- Erweiterte Protokollierung und Monitoring
-- Deployment in einer Cloud-Umgebung
+Possible future enhancements include:
 
-Diese Punkte sind mögliche Erweiterungen und keine Aussage über bereits implementierte Funktionen.
+- React and TypeScript frontend.
+- JWT-based authentication.
+- Role-based authorization for users and support agents.
+- Advanced search, filtering, and sorting.
+- Unit and integration tests.
+- Automated CI/CD pipeline.
+- Extended monitoring and application diagnostics.
+- Cloud deployment.
+
+These items are potential extensions, not claims about currently implemented functionality.
 
 ## Repository
 
-GitHub: https://github.com/romsches/mini-helpdesk
+**GitHub:** [github.com/romsches/mini-helpdesk](https://github.com/romsches/mini-helpdesk)
+
+---
+
+*Developed as a portfolio project to demonstrate backend development with C#, ASP.NET Core, Entity Framework Core, PostgreSQL, and Docker.*
