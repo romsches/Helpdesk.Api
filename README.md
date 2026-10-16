@@ -126,7 +126,7 @@ The ticket creation form with its title, description, and priority fields config
 
 ### 3. Ticket Details
 
-![Ticket Details Modal](screenshots/03_ticket_details_modal.png)
+![Ticket Details Modal](screenshots/03_ticket_details_modal.jpg)
 
 A detailed view of a selected ticket, including its metadata, creator, assigned employee, and creation timestamp.
 
